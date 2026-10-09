@@ -1,0 +1,257 @@
+{
+  "entities": {
+    "UserSetting": {
+      "title": "UserSetting",
+      "description": "Stores nursing staff user name, facility name, and shift preference for long-term care handover and printing.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Authenticated user UID",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Nurse or caregiver name displayed on printouts",
+          "maxLength": 100
+        },
+        "facilityName": {
+          "type": "string",
+          "description": "Long-term care nursing home facility name",
+          "maxLength": 120
+        },
+        "shiftName": {
+          "type": "string",
+          "description": "Current shift name (Day, Evening, Night)",
+          "maxLength": 50
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": ["ownerId", "userName", "facilityName", "shiftName", "createdAt", "updatedAt"]
+    },
+    "ResidentRecord": {
+      "title": "ResidentRecord",
+      "description": "Stores long-term care resident Kardex handover record, tubes, ADL, chronic meds, vitals, and resident todo items.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Authenticated user UID owning this resident record",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "residentId": {
+          "type": "string",
+          "description": "Unique resident record identifier",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "bedNo": {
+          "type": "string",
+          "description": "Room and bed number in the nursing home",
+          "maxLength": 50
+        },
+        "name": {
+          "type": "string",
+          "description": "Resident full name",
+          "maxLength": 100
+        },
+        "lastUpdatedText": {
+          "type": "string",
+          "description": "Formatted timestamp string for display",
+          "maxLength": 60
+        },
+        "patientInfo": {
+          "type": "object",
+          "description": "Resident basic demographics, CMS/ADL level, emergency contact, DNR, and infection control status"
+        },
+        "lines": {
+          "type": "object",
+          "description": "Long-term care tubes and assistive devices (NG, Foley, Tracheostomy, PEG, O2, Mobility aids)"
+        },
+        "ltcCare": {
+          "type": "object",
+          "description": "Daily nursing home care assessment including nutrition, bowel/bladder, turning schedule, and restraint status"
+        },
+        "labs": {
+          "type": "array",
+          "description": "Periodic lab and blood sugar check items"
+        },
+        "opExams": {
+          "type": "array",
+          "description": "Outpatient clinic follow-ups, physician rounds, and rehabilitation schedules"
+        },
+        "udDrugs": {
+          "type": "array",
+          "description": "Chronic medications and special administration instructions"
+        },
+        "vitalSigns": {
+          "type": "array",
+          "description": "Vital signs records across time slots"
+        },
+        "consults": {
+          "type": "array",
+          "description": "Multidisciplinary care notes (dietitian, PT/OT, social worker, family communication)"
+        },
+        "wounds": {
+          "type": "array",
+          "description": "Pressure injury and skin care records"
+        },
+        "bodyMarkers": {
+          "type": "array",
+          "description": "Body diagram markers for tubes and skin conditions"
+        },
+        "stickyNotes": {
+          "type": "array",
+          "description": "Resident-specific sticky notes and checklists"
+        },
+        "todoItems": {
+          "type": "array",
+          "description": "Structured resident care To-Do list items"
+        },
+        "receiveNote": {
+          "type": "string",
+          "description": "Shift care focus and daily observation notes",
+          "maxLength": 5000
+        },
+        "handoverNoteISBAR": {
+          "type": "string",
+          "description": "Structured ISBAR handover note for long-term care",
+          "maxLength": 5000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "ownerId",
+        "residentId",
+        "bedNo",
+        "name",
+        "lastUpdatedText",
+        "patientInfo",
+        "lines",
+        "ltcCare",
+        "labs",
+        "opExams",
+        "udDrugs",
+        "vitalSigns",
+        "consults",
+        "wounds",
+        "bodyMarkers",
+        "stickyNotes",
+        "todoItems",
+        "receiveNote",
+        "handoverNoteISBAR",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ShiftNote": {
+      "title": "ShiftNote",
+      "description": "Global nursing home shift sticky notes and facility-wide To-Do checklist items.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Authenticated user UID",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "noteId": {
+          "type": "string",
+          "description": "Unique shift note identifier",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Note title",
+          "maxLength": 200
+        },
+        "content": {
+          "type": "string",
+          "description": "Note content",
+          "maxLength": 2000
+        },
+        "color": {
+          "type": "string",
+          "description": "Sticky note color theme",
+          "maxLength": 20
+        },
+        "tag": {
+          "type": "string",
+          "description": "Category tag",
+          "maxLength": 50
+        },
+        "checklist": {
+          "type": "array",
+          "description": "Checklist items inside the sticky note"
+        },
+        "isPinned": {
+          "type": "boolean",
+          "description": "Whether the note is pinned"
+        },
+        "timeLabel": {
+          "type": "string",
+          "description": "Display time label",
+          "maxLength": 50
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "ownerId",
+        "noteId",
+        "title",
+        "content",
+        "color",
+        "tag",
+        "checklist",
+        "isPinned",
+        "timeLabel",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/userSettings/{userId}": {
+      "schema": { "$ref": "#/entities/UserSetting" },
+      "description": "Stores user profile and print header settings keyed by user UID."
+    },
+    "/residents/{residentDocId}": {
+      "schema": { "$ref": "#/entities/ResidentRecord" },
+      "description": "Stores long-term care resident Kardex handover records."
+    },
+    "/shiftNotes/{noteDocId}": {
+      "schema": { "$ref": "#/entities/ShiftNote" },
+      "description": "Stores facility-wide shift sticky notes and To-Do checklists."
+    }
+  }
+}

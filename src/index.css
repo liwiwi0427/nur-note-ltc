@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Noto Sans TC", sans-serif;
+  --font-serif: "Noto Serif TC", serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* A4 Print Optimization */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 6mm;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  input,
+  textarea,
+  select {
+    border-bottom: none !important;
+    background: transparent !important;
+    resize: none !important;
+  }
+}

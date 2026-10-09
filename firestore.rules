@@ -1,0 +1,176 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable Hardened Primitives
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isBoundedMapList(listVal, maxItems) {
+      return listVal is list && listVal.size() <= maxItems && (listVal.size() == 0 || listVal[0] is map);
+    }
+
+    // Validation Helper: UserSetting
+    function isValidUserSetting(data) {
+      return data.keys().hasAll(['ownerId', 'userName', 'facilityName', 'shiftName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'userName', 'facilityName', 'shiftName', 'createdAt', 'updatedAt'])
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.ownerId == request.auth.uid
+        && data.userName is string && data.userName.size() <= 100
+        && data.facilityName is string && data.facilityName.size() <= 120
+        && data.shiftName is string && data.shiftName.size() <= 50
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation Helper: ResidentRecord
+    function isValidResidentRecord(data) {
+      return data.keys().hasAll([
+          'ownerId', 'residentId', 'bedNo', 'name', 'lastUpdatedText',
+          'patientInfo', 'lines', 'ltcCare', 'labs', 'opExams', 'udDrugs',
+          'vitalSigns', 'consults', 'wounds', 'bodyMarkers', 'stickyNotes',
+          'todoItems', 'receiveNote', 'handoverNoteISBAR', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'residentId', 'bedNo', 'name', 'lastUpdatedText',
+          'patientInfo', 'lines', 'ltcCare', 'labs', 'opExams', 'udDrugs',
+          'vitalSigns', 'consults', 'wounds', 'bodyMarkers', 'stickyNotes',
+          'todoItems', 'receiveNote', 'handoverNoteISBAR', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.ownerId == request.auth.uid
+        && data.residentId is string && data.residentId.size() >= 1 && data.residentId.size() <= 128 && data.residentId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.bedNo is string && data.bedNo.size() <= 50
+        && data.name is string && data.name.size() <= 100
+        && data.lastUpdatedText is string && data.lastUpdatedText.size() <= 60
+        && data.patientInfo is map
+        && data.lines is map
+        && data.ltcCare is map
+        && isBoundedMapList(data.labs, 50)
+        && isBoundedMapList(data.opExams, 50)
+        && isBoundedMapList(data.udDrugs, 50)
+        && isBoundedMapList(data.vitalSigns, 50)
+        && isBoundedMapList(data.consults, 50)
+        && isBoundedMapList(data.wounds, 50)
+        && isBoundedMapList(data.bodyMarkers, 50)
+        && isBoundedMapList(data.stickyNotes, 50)
+        && isBoundedMapList(data.todoItems, 100)
+        && data.receiveNote is string && data.receiveNote.size() <= 5000
+        && data.handoverNoteISBAR is string && data.handoverNoteISBAR.size() <= 5000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Validation Helper: ShiftNote
+    function isValidShiftNote(data) {
+      return data.keys().hasAll([
+          'ownerId', 'noteId', 'title', 'content', 'color', 'tag',
+          'checklist', 'isPinned', 'timeLabel', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'noteId', 'title', 'content', 'color', 'tag',
+          'checklist', 'isPinned', 'timeLabel', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.ownerId == request.auth.uid
+        && data.noteId is string && data.noteId.size() >= 1 && data.noteId.size() <= 128 && data.noteId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.title is string && data.title.size() <= 200
+        && data.content is string && data.content.size() <= 2000
+        && data.color is string && data.color.size() <= 20
+        && data.tag is string && data.tag.size() <= 50
+        && isBoundedMapList(data.checklist, 50)
+        && data.isPinned is bool
+        && data.timeLabel is string && data.timeLabel.size() <= 50
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Collection: /userSettings/{userId}
+    match /userSettings/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && userId == request.auth.uid && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isSignedIn()
+        && isValidId(userId)
+        && userId == request.auth.uid
+        && isValidUserSetting(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(userId)
+        && userId == request.auth.uid
+        && isValidUserSetting(incoming())
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['userName', 'facilityName', 'shiftName', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(userId) && userId == request.auth.uid && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection: /residents/{residentDocId}
+    match /residents/{residentDocId} {
+      allow get: if isSignedIn() && isValidId(residentDocId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isSignedIn()
+        && isValidId(residentDocId)
+        && isValidResidentRecord(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(residentDocId)
+        && isValidResidentRecord(incoming())
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().residentId == existing().residentId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'bedNo', 'name', 'lastUpdatedText', 'patientInfo', 'lines', 'ltcCare',
+          'labs', 'opExams', 'udDrugs', 'vitalSigns', 'consults', 'wounds',
+          'bodyMarkers', 'stickyNotes', 'todoItems', 'receiveNote',
+          'handoverNoteISBAR', 'updatedAt'
+        ]);
+      allow delete: if isSignedIn() && isValidId(residentDocId) && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection: /shiftNotes/{noteDocId}
+    match /shiftNotes/{noteDocId} {
+      allow get: if isSignedIn() && isValidId(noteDocId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isSignedIn()
+        && isValidId(noteDocId)
+        && isValidShiftNote(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(noteDocId)
+        && isValidShiftNote(incoming())
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().noteId == existing().noteId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'content', 'color', 'tag', 'checklist', 'isPinned', 'timeLabel', 'updatedAt'
+        ]);
+      allow delete: if isSignedIn() && isValidId(noteDocId) && existing().ownerId == request.auth.uid;
+    }
+  }
+}

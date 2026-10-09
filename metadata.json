@@ -1,0 +1,8 @@
+{
+  "name": "Remix 菜鳥交班e點通（長照版）",
+  "description": "專為長期照顧機構與護理之家（Nursing Home）設計的智慧護理交班與日常照護管理系統，支援 ADL 與長照三管追蹤、慢箋給藥、巡診回診、雲端 Firebase 同步及含交班人姓名之待辦清單 PDF/DOC 匯出。",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
